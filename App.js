@@ -20,7 +20,6 @@ const SOUND_LARANJA_URL = 'https://actions.google.com/sounds/v1/alarms/beep_shor
 const CONFIG_KEY = '@v22_config';
 const ALERTADOS_KEY = '@v22_alertados';
 
-// Handler global: mostra notificação mesmo com app em foreground
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -60,7 +59,6 @@ export default function App() {
     ])).start();
   }, []);
 
-  // ---- Notificações: pedir permissão + criar canal ----
   useEffect(() => {
     (async () => {
       try {
@@ -75,7 +73,6 @@ export default function App() {
             console.log('Permissão de notificação negada');
           }
         }
-
         if (Platform.OS === 'android') {
           await Notifications.setNotificationChannelAsync('alertas-swing', {
             name: 'Alertas Swing Trade',
@@ -83,7 +80,7 @@ export default function App() {
             vibrationPattern: [0, 500, 200, 500],
             lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
             bypassDnd: true,
-            sound: null, // usa som padrão; ou defina 'alerta_ra.wav' se incluir asset
+            sound: null,
             enableVibrate: true,
             enableLights: true,
             lightColor: '#FF3B30',
@@ -95,7 +92,6 @@ export default function App() {
     })();
   }, []);
 
-  // Boot: config + sons + alertados persistidos
   useEffect(() => {
     (async () => {
       try {
@@ -152,7 +148,6 @@ export default function App() {
     }
   };
 
-  // Toca som (foreground) — será complementado pela notificação (background/bloqueado)
   const playSound = async (tipo) => {
     try {
       const cfg = configRef.current;
@@ -171,20 +166,19 @@ export default function App() {
     }
   };
 
-  // Dispara notificação local (funciona com celular bloqueado)
   const dispararNotificacao = async (tipo, ticker) => {
     try {
       let title = '';
       let body = '';
       if (tipo === 'RA') {
         title = '🔄 RA - Reversão de Alta';
-        body = `${ticker} detectou reversão de alta`;
+        body = ticker + ' detectou reversão de alta';
       } else if (tipo === 'RB') {
         title = '🔻 RB - Reversão de Baixa';
-        body = `${ticker} detectou reversão de baixa`;
+        body = ticker + ' detectou reversão de baixa';
       } else {
         title = '⚠️ Lucro abaixo do máximo (75%)';
-        body = `${ticker} está com lucro < 75% do máximo`;
+        body = ticker + ' está com lucro < 75% do máximo';
       }
 
       await Notifications.scheduleNotificationAsync({
@@ -198,9 +192,7 @@ export default function App() {
           sticky: false,
           autoDismiss: false,
         },
-        trigger: null, // imediato
-        // Para canal específico no Android, use:
-        // trigger: { channelId: 'alertas-swing' }
+        trigger: null,
       });
     } catch (e) {
       console.log('Erro notificação:', e);
@@ -251,7 +243,7 @@ export default function App() {
 
     posicoesList.forEach(p => {
       if (p.isRA || p.isRB) {
-        const key = `${p.ticker}-${p.sinal}`;
+        const key = p.ticker + '-' + p.sinal;
         if (now - (alertadosRef.current[key] || 0) > ALERT_COOLDOWN_MS) {
           playSound(p.sinal);
           dispararNotificacao(p.sinal, p.ticker);
@@ -260,7 +252,7 @@ export default function App() {
         }
       }
       if (p.isLaranja && !p.isRA && !p.isRB) {
-        const key = `${p.ticker}-LARANJA`;
+        const key = p.ticker + '-LARANJA';
         if (now - (alertadosRef.current[key] || 0) > ALERT_COOLDOWN_MS) {
           playSound('LARANJA');
           dispararNotificacao('LARANJA', p.ticker);
@@ -318,7 +310,7 @@ export default function App() {
     }
     try {
       const res = await fetch(
-        `https://api.telegram.org/bot${cfg.telegramToken}/sendMessage`,
+        'https://api.telegram.org/bot' + cfg.telegramToken + '/sendMessage',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -336,8 +328,6 @@ export default function App() {
 
   const totalInvestido = posicoes.reduce((s, p) => s + p.investido, 0);
   const totalAtualGeral = posicoes.reduce((s, p) => s + p.totalAtual, 0);
-
-  // ✅ Lucro = soma do lucro individual (respeita sinal de V e C)
   const lucroTotal = posicoes.reduce((s, p) => s + p.lucro, 0);
   const lucroTotalPct = totalInvestido ? (lucroTotal / totalInvestido) * 100 : 0;
 
@@ -447,7 +437,6 @@ export default function App() {
           <View style={{ height: 100 }} />
         </ScrollView>
 
-        {/* Modal COMPRA/VENDA */}
         <Modal visible={showOpModal} transparent animationType="slide">
           <View style={styles.modalBg}>
             <View style={styles.modalCard}>
@@ -462,7 +451,7 @@ export default function App() {
                 <TouchableOpacity
                   style={styles.modalConfirm}
                   onPress={async () => {
-                    const txt = `/op ${opForm.ticker} ${opForm.qtd} ${opForm.valor} ${opForm.acao}`;
+                    const txt = '/op ' + opForm.ticker + ' ' + opForm.qtd + ' ' + opForm.valor + ' ' + opForm.acao;
                     if (await enviarTelegram(txt)) setShowOpModal(false);
                   }}
                 >
@@ -473,7 +462,6 @@ export default function App() {
           </View>
         </Modal>
 
-        {/* Modal FECHAR */}
         <Modal visible={showFimModal} transparent animationType="slide">
           <View style={styles.modalBg}>
             <View style={styles.modalCard}>
@@ -487,7 +475,7 @@ export default function App() {
                 <TouchableOpacity
                   style={[styles.modalConfirm, { backgroundColor: '#FF3B30' }]}
                   onPress={async () => {
-                    const txt = `/fim ${fimForm.ticker} ${fimForm.preco}`;
+                    const txt = '/fim ' + fimForm.ticker + ' ' + fimForm.preco;
                     if (await enviarTelegram(txt)) setShowFimModal(false);
                   }}
                 >
@@ -498,7 +486,6 @@ export default function App() {
           </View>
         </Modal>
 
-        {/* Modal CONFIG */}
         <Modal visible={showConfig} transparent animationType="slide">
           <View style={styles.modalBg}>
             <View style={[styles.modalCard, { maxHeight: '90%' }]}>
@@ -527,10 +514,18 @@ export default function App() {
                 </View>
 
                 <Text style={styles.helpText}>
-                  Formato Firebase: TICKER QTD ENTRADA ATUAL TIPO LUCROMAX [RA|RB];{'\n'}
-                  Ex: VALEV694 1000 0.72 0.53 V 229.99 RA{'\n'}
-                  Ex: PETR4 100 42.5 44.2 C 150.00 RB{'\n'}
-                  RA=Reversão Alta, RB=Reversão Baixa.{'\n'}
+                  Formato Firebase: TICKER QTD ENTRADA ATUAL TIPO LUCROMAX [RA|RB];
+                </Text>
+                <Text style={styles.helpText}>
+                  Ex: VALEV694 1000 0.72 0.53 V 229.99 RA
+                </Text>
+                <Text style={styles.helpText}>
+                  Ex: PETR4 100 42.5 44.2 C 150.00 RB
+                </Text>
+                <Text style={styles.helpText}>
+                  RA=Reversão Alta, RB=Reversão Baixa.
+                </Text>
+                <Text style={styles.helpText}>
                   Notificações: importância MAX, lockscreen pública.
                 </Text>
 
@@ -560,17 +555,14 @@ const styles = StyleSheet.create({
   alertHeaderTextLaranja: { color: '#FF9500', fontWeight: '900', backgroundColor: '#FF950020', paddingHorizontal: 8, paddingVertical: 4, borderRadius: 10, overflow: 'hidden' },
   configBtn: { padding: 8 },
   configBtnText: { fontSize: 22 },
-
   totalCard: { backgroundColor: '#1C1C1E', marginHorizontal: 16, padding: 16, borderRadius: 20 },
   totalLabel: { color: '#8E8E93', fontSize: 12, fontWeight: '700' },
   totalValue: { color: '#fff', fontSize: 28, fontWeight: '900', marginTop: 4 },
   totalRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 8 },
   totalSub: { color: '#8E8E93', fontSize: 12 },
-
   actionsRow: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginTop: 12, marginBottom: 12 },
   actionBtn: { flex: 1, padding: 14, borderRadius: 14, alignItems: 'center' },
   actionBtnText: { color: '#fff', fontWeight: '900' },
-
   list: { flex: 1, paddingHorizontal: 16 },
   card: { backgroundColor: '#F2F2F7', borderRadius: 20, padding: 14, marginBottom: 12, borderWidth: 0 },
   cardLaranja: { borderWidth: 2, borderColor: '#FF9500' },
@@ -590,8 +582,16 @@ const styles = StyleSheet.create({
   cardSmall: { color: '#8E8E93', fontSize: 11 },
   cardTotal: { fontWeight: '800', fontSize: 13 },
   cardLucro: { fontWeight: '900', fontSize: 13 },
-
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
   modalCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20 },
   modalTitle: { fontSize: 18, fontWeight: '900', marginBottom: 12, textAlign: 'center' },
   input: { borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, padding: 12, marginBottom: 12, backgroundColor: '#F2F2F7' },
+  label: { fontSize: 12, fontWeight: '700', color: '#8E8E93', marginBottom: 4, marginTop: 4 },
+  switchRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginVertical: 8, backgroundColor: '#F2F2F7', padding: 12, borderRadius: 12 },
+  modalRow: { flexDirection: 'row', gap: 12, marginTop: 12 },
+  modalCancel: { flex: 1, backgroundColor: '#E5E5EA', padding: 14, borderRadius: 12, alignItems: 'center' },
+  modalCancelText: { fontWeight: '800', color: '#000' },
+  modalConfirm: { flex: 1, backgroundColor: '#007AFF', padding: 14, borderRadius: 12, alignItems: 'center' },
+  modalConfirmText: { fontWeight: '900', color: '#fff' },
+  helpText: { fontSize: 11, color: '#8E8E93', marginTop: 4, lineHeight: 16 },
+});
