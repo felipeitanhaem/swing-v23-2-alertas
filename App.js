@@ -594,4 +594,4 @@ const styles = StyleSheet.create({
   modalBg: { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', padding: 20 },
   modalCard: { backgroundColor: '#fff', borderRadius: 20, padding: 20 },
   modalTitle: { fontSize: 18, fontWeight: '900', marginBottom: 12, textAlign: 'center' },
-  input: { borderWidth: 1, borderColor: '#E5E
+  input: { borderWidth: 1, borderColor: '#E5E5EA', borderRadius: 12, padding: 12, marginBottom: 12, backgroundColor: '#F2F2F7' },
