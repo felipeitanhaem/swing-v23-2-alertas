@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Swing V23.2 Alertas",
+    "slug": "swing-v23-2-alertas",
+    "version": "23.2.0",
+    "orientation": "portrait",
+    "platforms": ["android"],
+    "android": {
+      "package": "com.antonio.swingv23alertas",
+      "versionCode": 232,
+      "permissions": [
+        "VIBRATE",
+        "INTERNET",
+        "WAKE_LOCK",
+        "USE_FULL_SCREEN_INTENT",
+        "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS"
+      ]
+    },
+    "plugins": [
+      ["expo-av", { "microphonePermission": false }],
+      [
+        "expo-notifications",
+        {
+          "color": "#FF9500",
+          "defaultChannel": "alertas-swing"
+        }
+      ]
+    ]
+  }
+}
