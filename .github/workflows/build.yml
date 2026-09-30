@@ -26,7 +26,7 @@ jobs:
       - name: Expo prebuild (Android)
         run: npx expo prebuild --platform android --clean
 
-      - name: Fix colors.xml (obrigatório Expo 50)
+      - name: Fix colors.xml (obrigatório Expo 50 + expo-notifications)
         run: |
           mkdir -p android/app/src/main/res/values
           cat > android/app/src/main/res/values/colors.xml << 'XML'
@@ -37,6 +37,7 @@ jobs:
             <color name="colorPrimaryDark">#000000</color>
             <color name="colorAccent">#FF9500</color>
             <color name="navigationBarColor">#000000</color>
+            <color name="notification_icon_color">#FF9500</color>
           </resources>
           XML
 
